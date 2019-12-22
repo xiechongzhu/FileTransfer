@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets network
 
 TARGET = FileTransfer
 TEMPLATE = app
@@ -27,13 +27,19 @@ CONFIG += c++11
 SOURCES += \
         logListViewModel.cpp \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        protocol/DataBuilder.cpp \
+        socket/SocketBase.cpp \
+        socket/TcpClientSocket.cpp
 
 HEADERS += \
         global/defines.h \
         global/protocol.h \
         logListViewModel.h \
-        mainwindow.h
+        mainwindow.h \
+        protocol/DataBuilder.h \
+        socket/SocketBase.h \
+        socket/TcpClientSocket.h
 
 FORMS += \
         mainwindow.ui

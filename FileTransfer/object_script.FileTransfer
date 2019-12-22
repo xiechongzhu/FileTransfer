@@ -1,0 +1,10 @@
+logListViewModel.o
+main.o
+mainwindow.o
+DataBuilder.o
+SocketBase.o
+TcpClientSocket.o
+moc_logListViewModel.o
+moc_mainwindow.o
+moc_SocketBase.o
+moc_TcpClientSocket.o

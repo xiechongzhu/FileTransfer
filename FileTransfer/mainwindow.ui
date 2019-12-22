@@ -54,7 +54,11 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="editIpAddr"/>
+              <widget class="QLineEdit" name="editIpAddr">
+               <property name="text">
+                <string notr="true"/>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QLabel" name="label_3">
@@ -64,7 +68,11 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="editPort"/>
+              <widget class="QLineEdit" name="editPort">
+               <property name="text">
+                <string notr="true"/>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QPushButton" name="btnConnect">
@@ -185,6 +193,30 @@
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
           </attribute>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>发送进度</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="progressBar">
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="textVisible">
+           <bool>true</bool>
+          </property>
+          <property name="invertedAppearance">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
        </layout>

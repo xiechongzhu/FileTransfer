@@ -9,6 +9,8 @@ static const int PROTOCOL_UDP = 2;
 
 static const int MAX_LOG_DISPLAY = 100;
 
+static const char* RECV_FOLDER = "./RECV/";
+
 enum class LOG_LEVEL
 {
     LOG_LEVEL_INFO,

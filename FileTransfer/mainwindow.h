@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "global/defines.h"
 #include "logListViewModel.h"
+#include "socket/SocketBase.h"
 
 namespace Ui {
 class MainWindow;
@@ -26,9 +27,25 @@ private slots:
 
     void on_btnClearFiles_clicked();
 
+    void on_btnConnect_clicked();
+
+    void on_btnDisconnect_clicked();
+
+    void on_btnSendFiles_clicked();
+
+    void on_btnStopSend_clicked();
+
 private:
     Ui::MainWindow *ui;
     CLogListViewModel m_logModel;
+    CSocketBase *m_pSocket;
+protected slots:
+    void slotClose();
+    void slotError(const QString& errString);
+    void slotMessage(const QString& message);
+    void slotHandShank();
+    void slotSendFileFinish();
+    void slotFileSendProgressChange(int progress);
 };
 
 #endif // MAINWINDOW_H
