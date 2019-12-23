@@ -27,7 +27,7 @@ void CSocketBase::Stop()
 
 void CSocketBase::SetLocalPort(uint16_t port)
 {
-
+    Q_UNUSED(port)
 }
 
 void CSocketBase::SendFile(const QStringList &fileList)
