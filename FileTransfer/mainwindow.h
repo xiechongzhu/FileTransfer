@@ -35,6 +35,8 @@ private slots:
 
     void on_btnStopSend_clicked();
 
+    void on_cbProtocol_currentIndexChanged(int index);
+
 private:
     Ui::MainWindow *ui;
     CLogListViewModel m_logModel;

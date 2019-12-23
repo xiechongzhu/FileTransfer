@@ -30,7 +30,8 @@ SOURCES += \
         mainwindow.cpp \
         protocol/DataBuilder.cpp \
         socket/SocketBase.cpp \
-        socket/TcpClientSocket.cpp
+        socket/TcpClientSocket.cpp \
+        socket/UdpSocket.cpp
 
 HEADERS += \
         global/defines.h \
@@ -39,7 +40,8 @@ HEADERS += \
         mainwindow.h \
         protocol/DataBuilder.h \
         socket/SocketBase.h \
-        socket/TcpClientSocket.h
+        socket/TcpClientSocket.h \
+        socket/UdpSocket.h
 
 FORMS += \
         mainwindow.ui

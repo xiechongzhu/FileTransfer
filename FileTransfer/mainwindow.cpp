@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include "socket/TcpClientSocket.h"
+#include "socket/UdpSocket.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -30,9 +31,6 @@ void MainWindow::InitWidgets()
     ui->logTableView->setColumnWidth(0, 140);
     ui->logTableView->setColumnWidth(1, 50);
     ui->logTableView->setColumnWidth(2, 600);
-
-    ui->editIpAddr->setText("127.0.0.1");
-    ui->editPort->setText("8080");
 }
 
 void MainWindow::addLog(LOG_LEVEL logLevel, const QString &logMsg)
@@ -74,7 +72,7 @@ void MainWindow::on_btnConnect_clicked()
         disconnect(m_pSocket, &CSocketBase::signalMessage, this, &MainWindow::slotMessage);
         disconnect(m_pSocket, &CSocketBase::signalFileSendFinish, this, &MainWindow::slotSendFileFinish);
         disconnect(m_pSocket, &CSocketBase::signalSendFileProgressChange, this, &MainWindow::slotFileSendProgressChange);
-        delete m_pSocket;
+        m_pSocket->deleteLater();
         m_pSocket = nullptr;
     }
     switch(ui->cbProtocol->currentData().toInt())
@@ -83,6 +81,8 @@ void MainWindow::on_btnConnect_clicked()
         m_pSocket = new CTcpClientSocket;
         break;
     case PROTOCOL_UDP:
+        m_pSocket = new CUdpSocket;
+        m_pSocket->SetLocalPort(ui->editLocalPort->text().toUShort());
         break;
     default:
         break;
@@ -152,7 +152,6 @@ void MainWindow::on_btnSendFiles_clicked()
         QListWidgetItem *pItem = ui->fileListWidget->item(i);
         fileList.append(pItem->text());
     }
-    //m_pSocket->SendFile(fileList);
     QMetaObject::invokeMethod(m_pSocket, "SendFile", Q_ARG(const QStringList&, fileList));
     ui->btnSendFiles->setEnabled(false);
     ui->btnStopSend->setEnabled(true);
@@ -161,4 +160,20 @@ void MainWindow::on_btnSendFiles_clicked()
 void MainWindow::on_btnStopSend_clicked()
 {
     m_pSocket->StopSend();
+}
+
+void MainWindow::on_cbProtocol_currentIndexChanged(int index)
+{
+    Q_UNUSED(index);
+    switch (ui->cbProtocol->currentData().toInt())
+    {
+    case PROTOCOL_TCP:
+        ui->editLocalPort->setEnabled(false);
+        break;
+    case PROTOCOL_UDP:
+        ui->editLocalPort->setEnabled(true);
+        break;
+    default:
+        break;
+    }
 }

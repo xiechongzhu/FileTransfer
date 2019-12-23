@@ -5,12 +5,19 @@
 
 CTcpClientSocket::CTcpClientSocket() : m_dataBufferPos(0)
 {
-    qRegisterMetaType<uint16_t>("uint16_t");
+
 }
 
 CTcpClientSocket::~CTcpClientSocket()
 {
-    delete m_pSocket;
+    if(m_pSocket)
+    {
+        disconnect(m_pSocket, &QTcpSocket::connected, this, &CTcpClientSocket::slotConnected);
+        disconnect(m_pSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &CTcpClientSocket::slotSocketError);
+        disconnect(m_pSocket, &QTcpSocket::disconnected, this, &CTcpClientSocket::slotDoisconnected);
+        disconnect(m_pSocket, &QTcpSocket::readyRead, this, &CTcpClientSocket::slotReadyRead);
+        delete m_pSocket;
+    }
 }
 
 void CTcpClientSocket::Start(const QString &ipAddr, uint16_t port)
@@ -32,7 +39,6 @@ void CTcpClientSocket::SendData(const QByteArray &data)
     while(bytesToWrite)
     {
         int64_t ret = m_pSocket->write(pData+pos, bytesToWrite);
-        m_pSocket->waitForBytesWritten();
         if(-1 == ret)
         {
             emit signalError(QString("发送数据错误:%1").arg(m_pSocket->errorString()));
@@ -40,6 +46,7 @@ void CTcpClientSocket::SendData(const QByteArray &data)
         }
         bytesToWrite -= ret;
         pos += ret;
+        m_pSocket->waitForBytesWritten();
     }
 }
 
@@ -76,6 +83,7 @@ void CTcpClientSocket::ParseData()
                 break;
             case CMD_FILE_DATA:
                 ProcessFileData(m_dataBuffer);
+                break;
             default:
                 break;
             }
@@ -92,6 +100,7 @@ void CTcpClientSocket::ParseData()
 void CTcpClientSocket::InternalStart(const QString &ipAddr, uint16_t port)
 {
     m_pSocket = new QTcpSocket;
+    m_pSocket->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
     connect(m_pSocket, &QTcpSocket::connected, this, &CTcpClientSocket::slotConnected);
     connect(m_pSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &CTcpClientSocket::slotSocketError);
     connect(m_pSocket, &QTcpSocket::disconnected, this, &CTcpClientSocket::slotDoisconnected);
@@ -122,6 +131,7 @@ void CTcpClientSocket::slotSocketError(QAbstractSocket::SocketError socketError)
         emit signalError(QStringLiteral("连接服务器失败:") + m_pSocket->errorString());
         break;
     default:
+        emit signalError(QStringLiteral("套接字错误:%1").arg(m_pSocket->errorString()));
         break;
     }
 }

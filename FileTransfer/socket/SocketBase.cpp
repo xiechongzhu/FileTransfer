@@ -9,7 +9,8 @@
 
 CSocketBase::CSocketBase() : m_socketStatus(SOCKET_STATUS::SOCKET_STATUS_CLOSE), m_bSend(false)
 {
-    qRegisterMetaType<QAbstractSocket::SocketError>();
+    qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
+    qRegisterMetaType<uint16_t>("uint16_t");
     moveToThread(&m_thread);
     m_thread.start();
 }
@@ -24,8 +25,14 @@ void CSocketBase::Stop()
     m_file.close();
 }
 
+void CSocketBase::SetLocalPort(uint16_t port)
+{
+
+}
+
 void CSocketBase::SendFile(const QStringList &fileList)
 {
+    m_SendFileDataPacketCnt = 0;
     uint64_t byteSend = 0;
     uint64_t byteTotal = 0;
     foreach(const QString& fileFullName, fileList)
@@ -52,7 +59,10 @@ void CSocketBase::SendFile(const QStringList &fileList)
                 {
                     SendData(CDataBuilder::BuildPacket(CMD_FILE_DATA, QByteArray(buffer, readBytes)));
                     byteSend += readBytes;
+                    m_SendFileDataPacketCnt++;
                     emit signalSendFileProgressChange((float)byteSend/byteTotal*100);
+                    //TODO:: Qt的套接字太垃圾，这里不休眠，发送数据就会丢包
+                    QThread::currentThread()->msleep(1);
                 }
                 else
                 {
@@ -70,6 +80,7 @@ void CSocketBase::SendFile(const QStringList &fileList)
             emit signalError(QString("打开文件失败:%1,错误:%2").arg(fileName).arg(file.errorString()));
         }
     }
+    qDebug() << "发送文件数据包数:" <<m_SendFileDataPacketCnt;
     emit signalFileSendFinish();
 }
 
@@ -82,7 +93,7 @@ void CSocketBase::ProcessHandShank()
 {
     QByteArray data = CDataBuilder::BuildPacket(CMD_HANDSHANK_RESP);
     SendData(data);
-    emit signalMessage("向服务器发送握手回应");
+    emit signalMessage("收到服务器握手请求,向服务器发送握手回应");
     m_socketStatus = SOCKET_STATUS::SOCKET_STATUS_HANDSHANK;
     emit signalHandShank();
 }

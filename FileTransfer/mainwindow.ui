@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>文件传输</string>
+   <string>文件传输客户端</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -56,7 +56,7 @@
              <item>
               <widget class="QLineEdit" name="editIpAddr">
                <property name="text">
-                <string notr="true"/>
+                <string notr="true">127.0.0.1</string>
                </property>
               </widget>
              </item>
@@ -70,7 +70,21 @@
              <item>
               <widget class="QLineEdit" name="editPort">
                <property name="text">
-                <string notr="true"/>
+                <string notr="true">8080</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>本地端口:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="editLocalPort">
+               <property name="text">
+                <string>6666</string>
                </property>
               </widget>
              </item>
