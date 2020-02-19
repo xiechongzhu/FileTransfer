@@ -20,9 +20,9 @@ CTcpClientSocket::~CTcpClientSocket()
     }
 }
 
-void CTcpClientSocket::Start(const QString &ipAddr, uint16_t port)
+void CTcpClientSocket::Start(const QString &remoteAddr, uint16_t remotePort, uint16_t localPort)
 {
-    QMetaObject::invokeMethod(this, "InternalStart", Q_ARG(const QString&, ipAddr), Q_ARG(uint16_t, port));
+    QMetaObject::invokeMethod(this, "InternalStart", Q_ARG(const QString&, remoteAddr), Q_ARG(uint16_t, remotePort));
 }
 
 void CTcpClientSocket::Stop()

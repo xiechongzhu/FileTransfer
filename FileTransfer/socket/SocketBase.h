@@ -21,13 +21,12 @@ public:
 
     CSocketBase();
     virtual ~CSocketBase();
-    virtual void Start(const QString& ipAddr, uint16_t port) = 0;
+    virtual void Start(const QString& remoteAddr, uint16_t remotePort, uint16_t localPort) = 0;
     virtual void Stop();
-    virtual void SetLocalPort(uint16_t port);
     Q_INVOKABLE void SendFile(const QStringList& fileList);
     void StopSend();
 protected:
-    static const int READ_BUFFER_SIZE = 1024 * 60;
+    static const int READ_BUFFER_SIZE = 2000;
     SOCKET_STATUS m_socketStatus;
     uint64_t m_SendFileDataPacketCnt;
     void ProcessHandShank();

@@ -10,9 +10,8 @@ class CUdpSocket : public CSocketBase
 public:
     CUdpSocket();
     virtual ~CUdpSocket() override;
-    virtual void Start(const QString &ipAddr, uint16_t port) override;
+    virtual void Start(const QString& remoteAddr, uint16_t remotePort, uint16_t localPort) override;
     virtual void Stop() override;
-    virtual void SetLocalPort(uint16_t port) override;
 protected:
     Q_INVOKABLE virtual void SendData(const QByteArray& data) override;
     Q_INVOKABLE void InternalStart(const QString &ipAddr, uint16_t port);

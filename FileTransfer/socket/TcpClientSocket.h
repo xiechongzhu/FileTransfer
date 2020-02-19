@@ -11,7 +11,7 @@ public:
     static const uint32_t MAX_BUFFER_LENGTH = 1024 * 1024 *16;
     CTcpClientSocket();
     virtual ~CTcpClientSocket() override;
-    virtual void Start(const QString &ipAddr, uint16_t port) override;
+    virtual void Start(const QString& remoteAddr, uint16_t remotePort, uint16_t localPort) override;
     virtual void Stop() override;
 protected:
     Q_INVOKABLE virtual void SendData(const QByteArray& data) override;

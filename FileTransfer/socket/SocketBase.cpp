@@ -25,11 +25,6 @@ void CSocketBase::Stop()
     m_file.close();
 }
 
-void CSocketBase::SetLocalPort(uint16_t port)
-{
-    Q_UNUSED(port)
-}
-
 void CSocketBase::SendFile(const QStringList &fileList)
 {
     m_SendFileDataPacketCnt = 0;
@@ -61,8 +56,6 @@ void CSocketBase::SendFile(const QStringList &fileList)
                     byteSend += readBytes;
                     m_SendFileDataPacketCnt++;
                     emit signalSendFileProgressChange((float)byteSend/byteTotal*100);
-                    //TODO:: Qt的套接字太垃圾，这里不休眠，发送数据就会丢包
-                    QThread::currentThread()->msleep(1);
                 }
                 else
                 {

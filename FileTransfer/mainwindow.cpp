@@ -20,8 +20,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::InitWidgets()
 {
-    ui->cbProtocol->addItem("TCP", PROTOCOL_TCP);
-    ui->cbProtocol->addItem("UDP", PROTOCOL_UDP);
+    ui->cbProtocol->addItem("TCP文件客户端", PROTOCOL_TCP_CLIENT);
+    ui->cbProtocol->addItem("UDP文件客户端", PROTOCOL_UDP_CLIENT);
+    ui->cbProtocol->addItem("TCP文件服务器", PROTOCOL_TCP_SERVER);
+    ui->cbProtocol->addItem("UDP文件服务器", PROTOCOL_UDP_SERVER);
 
     ui->btnDisconnect->setEnabled(false);
     ui->btnSendFiles->setEnabled(false);
@@ -77,12 +79,15 @@ void MainWindow::on_btnConnect_clicked()
     }
     switch(ui->cbProtocol->currentData().toInt())
     {
-    case PROTOCOL_TCP:
+    case PROTOCOL_TCP_CLIENT:
         m_pSocket = new CTcpClientSocket;
         break;
-    case PROTOCOL_UDP:
+    case PROTOCOL_UDP_CLIENT:
         m_pSocket = new CUdpSocket;
-        m_pSocket->SetLocalPort(ui->editLocalPort->text().toUShort());
+        break;
+    case PROTOCOL_TCP_SERVER:
+        break;
+    case PROTOCOL_UDP_SERVER:
         break;
     default:
         break;
@@ -95,7 +100,7 @@ void MainWindow::on_btnConnect_clicked()
         connect(m_pSocket, &CSocketBase::signalHandShank, this, &MainWindow::slotHandShank);
         connect(m_pSocket, &CSocketBase::signalFileSendFinish, this, &MainWindow::slotSendFileFinish);
         connect(m_pSocket, &CSocketBase::signalSendFileProgressChange, this, &MainWindow::slotFileSendProgressChange);
-        m_pSocket->Start(ui->editIpAddr->text(), ui->editPort->text().toUShort());
+        m_pSocket->Start(ui->editIpAddr->text(), ui->editRemotePort->text().toUShort(), ui->editLocalPort->text().toUShort());
     }
 }
 
@@ -167,10 +172,10 @@ void MainWindow::on_cbProtocol_currentIndexChanged(int index)
     Q_UNUSED(index);
     switch (ui->cbProtocol->currentData().toInt())
     {
-    case PROTOCOL_TCP:
+    case PROTOCOL_TCP_CLIENT:
         ui->editLocalPort->setEnabled(false);
         break;
-    case PROTOCOL_UDP:
+    case PROTOCOL_UDP_CLIENT:
         ui->editLocalPort->setEnabled(true);
         break;
     default:

@@ -4,8 +4,10 @@
 #include <QString>
 #include <QDateTime>
 
-static const int PROTOCOL_TCP = 1;
-static const int PROTOCOL_UDP = 2;
+static const int PROTOCOL_TCP_CLIENT = 1;
+static const int PROTOCOL_UDP_CLIENT = 2;
+static const int PROTOCOL_TCP_SERVER = 3;
+static const int PROTOCOL_UDP_SERVER = 4;
 
 static const int MAX_LOG_DISPLAY = 100;
 

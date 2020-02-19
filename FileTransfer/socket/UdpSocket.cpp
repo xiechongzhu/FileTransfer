@@ -17,20 +17,16 @@ CUdpSocket::~CUdpSocket()
     }
 }
 
-void CUdpSocket::Start(const QString &ipAddr, uint16_t port)
+void CUdpSocket::Start(const QString &remoteAddr, uint16_t remotePort, uint16_t localPort)
 {
-    QMetaObject::invokeMethod(this, "InternalStart", Q_ARG(const QString&, ipAddr), Q_ARG(uint16_t, port));
+    m_localPort = localPort;
+    QMetaObject::invokeMethod(this, "InternalStart", Q_ARG(const QString&, remoteAddr), Q_ARG(uint16_t, remotePort));
 }
 
 void CUdpSocket::Stop()
 {
     CSocketBase::Stop();
     QMetaObject::invokeMethod(this, "InternalStop");
-}
-
-void CUdpSocket::SetLocalPort(uint16_t port)
-{
-    m_localPort = port;
 }
 
 void CUdpSocket::SendData(const QByteArray &data)
