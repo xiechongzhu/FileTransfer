@@ -48,8 +48,8 @@ void CSocketBase::SendFile(const QStringList &fileList)
             while(!file.atEnd() && m_bSend)
             {
                 QApplication::processEvents();
-                char buffer[READ_BUFFER_SIZE] = {0};
-                int64_t readBytes = file.read(buffer, READ_BUFFER_SIZE);
+                char buffer[m_sendBufferSize];
+                int64_t readBytes = file.read(buffer, m_sendBufferSize);
                 if(readBytes > 0)
                 {
                     SendData(CDataBuilder::BuildPacket(CMD_FILE_DATA, QByteArray(buffer, readBytes)));
@@ -82,7 +82,12 @@ void CSocketBase::StopSend()
     m_bSend = false;
 }
 
-void CSocketBase::ProcessHandShank()
+void CSocketBase::setSendBufferSize(int bufferSize)
+{
+    m_sendBufferSize = bufferSize;
+}
+
+void CSocketBase::ProcessHandShankReq()
 {
     QByteArray data = CDataBuilder::BuildPacket(CMD_HANDSHANK_RESP);
     SendData(data);

@@ -5,7 +5,7 @@
 
 CTcpClientSocket::CTcpClientSocket() : m_dataBufferPos(0)
 {
-
+    setSendBufferSize(6000);
 }
 
 CTcpClientSocket::~CTcpClientSocket()
@@ -73,7 +73,7 @@ void CTcpClientSocket::ParseData()
             switch (cmd)
             {
             case CMD_HANDSHANK_REQ:
-                ProcessHandShank();
+                ProcessHandShankReq();
                 break;
             case CMD_FILE_START:
                 ProcessFileStart(m_dataBuffer);

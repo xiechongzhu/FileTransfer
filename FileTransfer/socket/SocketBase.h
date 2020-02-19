@@ -25,11 +25,11 @@ public:
     virtual void Stop();
     Q_INVOKABLE void SendFile(const QStringList& fileList);
     void StopSend();
+    void setSendBufferSize(int bufferSize);
 protected:
-    static const int READ_BUFFER_SIZE = 2000;
     SOCKET_STATUS m_socketStatus;
     uint64_t m_SendFileDataPacketCnt;
-    void ProcessHandShank();
+    void ProcessHandShankReq();
     void ProcessFileStart(const uint8_t* packet);
     void ProcessFileEnd();
     void ProcessFileData(const uint8_t* packet);
@@ -38,6 +38,7 @@ protected:
     bool m_bSend;
 private:
     QFile m_file;
+    int m_sendBufferSize;
 signals:
     void signalError(const QString& errString);
     void signalMessage(const QString& message);

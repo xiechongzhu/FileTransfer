@@ -174,9 +174,17 @@ void MainWindow::on_cbProtocol_currentIndexChanged(int index)
     {
     case PROTOCOL_TCP_CLIENT:
         ui->editLocalPort->setEnabled(false);
+        ui->btnHandShank->setVisible(false);
         break;
     case PROTOCOL_UDP_CLIENT:
         ui->editLocalPort->setEnabled(true);
+        ui->btnHandShank->setVisible(false);
+        break;
+    case PROTOCOL_TCP_SERVER:
+        ui->btnHandShank->setVisible(true);
+        break;
+    case PROTOCOL_UDP_SERVER:
+        ui->btnHandShank->setVisible(true);
         break;
     default:
         break;

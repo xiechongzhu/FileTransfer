@@ -4,7 +4,7 @@
 
 CUdpSocket::CUdpSocket()
 {
-
+    setSendBufferSize(2000);
 }
 
 CUdpSocket::~CUdpSocket()
@@ -74,7 +74,7 @@ void CUdpSocket::ParseData(const uint8_t *buffer)
     switch (cmd)
     {
     case CMD_HANDSHANK_REQ:
-        ProcessHandShank();
+        ProcessHandShankReq();
         break;
     case CMD_FILE_START:
         ProcessFileStart(buffer);
