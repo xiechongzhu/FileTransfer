@@ -27,6 +27,7 @@ void CSocketBase::Stop()
 
 void CSocketBase::SendFile(const QStringList &fileList)
 {
+    char *buffer = new char[m_sendBufferSize];
     m_SendFileDataPacketCnt = 0;
     uint64_t byteSend = 0;
     uint64_t byteTotal = 0;
@@ -48,7 +49,6 @@ void CSocketBase::SendFile(const QStringList &fileList)
             while(!file.atEnd() && m_bSend)
             {
                 QApplication::processEvents();
-                char buffer[m_sendBufferSize];
                 int64_t readBytes = file.read(buffer, m_sendBufferSize);
                 if(readBytes > 0)
                 {
@@ -75,6 +75,7 @@ void CSocketBase::SendFile(const QStringList &fileList)
     }
     qDebug() << "发送文件数据包数:" <<m_SendFileDataPacketCnt;
     emit signalFileSendFinish();
+    delete[] buffer;
 }
 
 void CSocketBase::StopSend()

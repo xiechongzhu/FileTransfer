@@ -2,10 +2,11 @@
 #include "protocol/Databuilder.h"
 #include <QtEndian>
 #include <QtConcurrent/QtConcurrent>
+#include "global/defines.h"
 
 CUdpSocket::CUdpSocket()
 {
-    SetSendBufferSize(5000);
+    SetSendBufferSize(UDP_SEND_BUFFER_SIZE);
 }
 
 CUdpSocket::~CUdpSocket()
@@ -153,7 +154,7 @@ bool CUdpSocket::CreateSocket(uint16_t port, uint64_t &errCode)
 void CUdpSocket::startSelect()
 {
     QtConcurrent::run([this](){
-        char buffer[1024*100] = {0};
+        char* buffer = new char[RECV_BUFFER_SIZE];
         fd_set readSet, exceptionSet;
         while(m_socket != INVALID_SOCKET)
         {
@@ -166,13 +167,13 @@ void CUdpSocket::startSelect()
                 emit signalError(QString("套接字错误:%1").arg(GetLastError()));
                 closesocket(m_socket);
                 m_socket = INVALID_SOCKET;
-                return;
+                break;
             }
             if(FD_ISSET(m_socket, &readSet))
             {
                 sockaddr_in fromAddr;
                 int fromLen = sizeof(fromAddr);
-                int64_t readBytes = recvfrom(m_socket, buffer, sizeof(buffer), 0, (sockaddr*)&fromAddr, &fromLen);
+                int64_t readBytes = recvfrom(m_socket, buffer, RECV_BUFFER_SIZE, 0, (sockaddr*)&fromAddr, &fromLen);
                 if(readBytes == -1)
                 {
                     if(GetLastError() != 10038)
@@ -181,7 +182,7 @@ void CUdpSocket::startSelect()
                     }
                     closesocket(m_socket);
                     m_socket = INVALID_SOCKET;
-                    return;
+                    break;
                 }
                 if(readBytes >= sizeof (Packet))
                 {
@@ -193,8 +194,9 @@ void CUdpSocket::startSelect()
                 emit signalError(QString("套接字错误:%1").arg(GetLastError()));
                 closesocket(m_socket);
                 m_socket = INVALID_SOCKET;
-                return;
+                break;
             }
         }
+        delete[] buffer;
     });
 }

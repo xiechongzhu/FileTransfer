@@ -13,6 +13,10 @@ static const int MAX_LOG_DISPLAY = 100;
 
 static const char* RECV_FOLDER = "./RECV/";
 
+static const int UDP_SEND_BUFFER_SIZE = 5000;
+static const int TCP_SEND_BUFFER_SIZE = 100000;
+static const int RECV_BUFFER_SIZE = 1000000;
+
 enum class LOG_LEVEL
 {
     LOG_LEVEL_INFO,

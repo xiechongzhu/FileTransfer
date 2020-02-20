@@ -3,12 +3,12 @@
 
 #include "SocketBase.h"
 #include <QTcpSocket>
+#include "global/defines.h"
 
 class CTcpClientSocket : public CSocketBase
 {
     Q_OBJECT
 public:
-    static const uint32_t MAX_BUFFER_LENGTH = 1024 * 1024 *16;
     CTcpClientSocket();
     virtual ~CTcpClientSocket() override;
     virtual void StartClient(const QString& serverAddr, uint16_t serverPort) override;
@@ -21,7 +21,7 @@ protected:
     Q_INVOKABLE void InternalStop();
 private:
     QTcpSocket *m_pSocket;
-    uint8_t m_dataBuffer[MAX_BUFFER_LENGTH];
+    uint8_t m_dataBuffer[RECV_BUFFER_SIZE];
     uint32_t m_dataBufferPos;
 protected slots:
     void slotConnected();

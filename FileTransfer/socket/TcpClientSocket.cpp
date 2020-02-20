@@ -2,10 +2,11 @@
 #include "protocol/Databuilder.h"
 #include <QtEndian>
 #include <QDebug>
+#include "global/defines.h"
 
 CTcpClientSocket::CTcpClientSocket() : m_dataBufferPos(0)
 {
-    SetSendBufferSize(6000);
+    SetSendBufferSize(TCP_SEND_BUFFER_SIZE);
 }
 
 CTcpClientSocket::~CTcpClientSocket()
@@ -27,7 +28,7 @@ void CTcpClientSocket::StartClient(const QString &serverAddr, uint16_t serverPor
 
 void CTcpClientSocket::StartServer(uint16_t serverPort)
 {
-
+    Q_UNUSED(serverPort)
 }
 
 void CTcpClientSocket::Stop()
@@ -80,6 +81,9 @@ void CTcpClientSocket::ParseData()
             case CMD_HANDSHANK_REQ:
                 ProcessHandShankReq();
                 break;
+            case CMD_HANDSHANK_RESP:
+                ProcessHandShankResp();
+                break;
             case CMD_FILE_START:
                 ProcessFileStart(m_dataBuffer);
                 break;
@@ -125,6 +129,7 @@ void CTcpClientSocket::slotConnected()
 {
     emit signalMessage("连接服务器成功");
     m_socketStatus = SOCKET_STATUS::SOCKET_STATUS_CONNECTED;
+    SendHandShankReq();
 }
 
 void CTcpClientSocket::slotSocketError(QAbstractSocket::SocketError socketError)
@@ -152,7 +157,7 @@ void CTcpClientSocket::slotReadyRead()
 {
     while(m_pSocket->bytesAvailable())
     {
-        int64_t readBytes = m_pSocket->read(reinterpret_cast<char*>(m_dataBuffer+m_dataBufferPos), MAX_BUFFER_LENGTH-m_dataBufferPos);
+        int64_t readBytes = m_pSocket->read(reinterpret_cast<char*>(m_dataBuffer+m_dataBufferPos), RECV_BUFFER_SIZE-m_dataBufferPos);
         if(-1 == readBytes)
         {
             emit signalError(QString("读取套接字数据错误:%1").arg(m_pSocket->errorString()));
