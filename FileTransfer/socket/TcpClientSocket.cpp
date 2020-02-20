@@ -5,7 +5,7 @@
 
 CTcpClientSocket::CTcpClientSocket() : m_dataBufferPos(0)
 {
-    setSendBufferSize(6000);
+    SetSendBufferSize(6000);
 }
 
 CTcpClientSocket::~CTcpClientSocket()
@@ -20,9 +20,14 @@ CTcpClientSocket::~CTcpClientSocket()
     }
 }
 
-void CTcpClientSocket::Start(const QString &remoteAddr, uint16_t remotePort, uint16_t localPort)
+void CTcpClientSocket::StartClient(const QString &serverAddr, uint16_t serverPort)
 {
-    QMetaObject::invokeMethod(this, "InternalStart", Q_ARG(const QString&, remoteAddr), Q_ARG(uint16_t, remotePort));
+    QMetaObject::invokeMethod(this, "InternalStartClient", Q_ARG(const QString&, serverAddr), Q_ARG(uint16_t, serverPort));
+}
+
+void CTcpClientSocket::StartServer(uint16_t serverPort)
+{
+
 }
 
 void CTcpClientSocket::Stop()
@@ -97,7 +102,7 @@ void CTcpClientSocket::ParseData()
     }
 }
 
-void CTcpClientSocket::InternalStart(const QString &ipAddr, uint16_t port)
+void CTcpClientSocket::InternalStartClient(const QString &ipAddr, uint16_t port)
 {
     m_pSocket = new QTcpSocket;
     m_pSocket->setSocketOption(QAbstractSocket::KeepAliveOption, 1);

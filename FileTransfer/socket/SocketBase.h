@@ -21,15 +21,18 @@ public:
 
     CSocketBase();
     virtual ~CSocketBase();
-    virtual void Start(const QString& remoteAddr, uint16_t remotePort, uint16_t localPort) = 0;
+    virtual void StartClient(const QString& serverAddr, uint16_t serverPort) = 0;
+    virtual void StartServer(uint16_t serverPort) = 0;
     virtual void Stop();
     Q_INVOKABLE void SendFile(const QStringList& fileList);
     void StopSend();
-    void setSendBufferSize(int bufferSize);
+    void SetSendBufferSize(int bufferSize);
+    void SendHandShankReq();
 protected:
     SOCKET_STATUS m_socketStatus;
     uint64_t m_SendFileDataPacketCnt;
     void ProcessHandShankReq();
+    void ProcessHandShankResp();
     void ProcessFileStart(const uint8_t* packet);
     void ProcessFileEnd();
     void ProcessFileData(const uint8_t* packet);
@@ -39,11 +42,13 @@ protected:
 private:
     QFile m_file;
     int m_sendBufferSize;
+    int m_recvCount;
 signals:
     void signalError(const QString& errString);
     void signalMessage(const QString& message);
     void signalClose();
-    void signalHandShank();
+    void signalHandShankReq();
+    void signalHandShankResp();
     void signalFileSendFinish();
     void signalSendFileProgressChange(int progress);
 };

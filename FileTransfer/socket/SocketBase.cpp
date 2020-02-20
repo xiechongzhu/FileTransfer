@@ -82,7 +82,13 @@ void CSocketBase::StopSend()
     m_bSend = false;
 }
 
-void CSocketBase::setSendBufferSize(int bufferSize)
+void CSocketBase::SendHandShankReq()
+{
+    QByteArray data = CDataBuilder::BuildPacket(CMD_HANDSHANK_REQ);
+    SendData(data);
+}
+
+void CSocketBase::SetSendBufferSize(int bufferSize)
 {
     m_sendBufferSize = bufferSize;
 }
@@ -91,9 +97,16 @@ void CSocketBase::ProcessHandShankReq()
 {
     QByteArray data = CDataBuilder::BuildPacket(CMD_HANDSHANK_RESP);
     SendData(data);
-    emit signalMessage("收到服务器握手请求,向服务器发送握手回应");
+    emit signalMessage("收到客户端握手请求,发送握手回应");
     m_socketStatus = SOCKET_STATUS::SOCKET_STATUS_HANDSHANK;
-    emit signalHandShank();
+    emit signalHandShankReq();
+}
+
+void CSocketBase::ProcessHandShankResp()
+{
+    emit signalMessage("收到服务器握手回应");
+    m_socketStatus = SOCKET_STATUS::SOCKET_STATUS_HANDSHANK;
+    emit signalHandShankResp();
 }
 
 void CSocketBase::ProcessFileStart(const uint8_t *packet)
@@ -102,8 +115,10 @@ void CSocketBase::ProcessFileStart(const uint8_t *packet)
     {
         return;
     }
+    m_recvCount = 0;
     const Packet *pPacket = reinterpret_cast<const Packet*>(packet);
     QString strFileName = QString(RECV_FOLDER)+QString::fromUtf8(QByteArray(reinterpret_cast<const char*>(pPacket->data), qFromBigEndian(pPacket->body_length)));
+    emit signalMessage(QString("收到文件发送请求:%1").arg(strFileName));
     m_file.setFileName(strFileName);
     if(!m_file.open(QFile::WriteOnly))
     {
@@ -123,6 +138,7 @@ void CSocketBase::ProcessFileEnd()
     }
     m_file.close();
     emit signalMessage(QString("关闭文件:%1").arg(m_file.fileName()));
+    qDebug() << "Recv File Packet:" << m_recvCount;
 }
 
 void CSocketBase::ProcessFileData(const uint8_t *packet)
@@ -131,6 +147,7 @@ void CSocketBase::ProcessFileData(const uint8_t *packet)
     {
         return;
     }
+    m_recvCount++;
     const Packet *pPacket = reinterpret_cast<const Packet*>(packet);
     uint32_t dataLength = qFromBigEndian(pPacket->body_length);
     uint32_t writePos = 0;

@@ -1,26 +1,29 @@
 #include "UdpSocket.h"
 #include "protocol/Databuilder.h"
 #include <QtEndian>
+#include <QtConcurrent/QtConcurrent>
 
 CUdpSocket::CUdpSocket()
 {
-    setSendBufferSize(2000);
+    SetSendBufferSize(5000);
 }
 
 CUdpSocket::~CUdpSocket()
 {
-    if(m_pSocket)
+    if(m_socket != INVALID_SOCKET)
     {
-        disconnect(m_pSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &CUdpSocket::slotSocketError);
-        disconnect(m_pSocket, &QUdpSocket::readyRead, this, &CUdpSocket::slotReadyRead);
-        delete m_pSocket;
+        closesocket(m_socket);
     }
 }
 
-void CUdpSocket::Start(const QString &remoteAddr, uint16_t remotePort, uint16_t localPort)
+void CUdpSocket::StartClient(const QString &serverAddr, uint16_t serverPort)
 {
-    m_localPort = localPort;
-    QMetaObject::invokeMethod(this, "InternalStart", Q_ARG(const QString&, remoteAddr), Q_ARG(uint16_t, remotePort));
+    QMetaObject::invokeMethod(this, "InternalStartClient", Q_ARG(const QString&, serverAddr), Q_ARG(uint16_t, serverPort));
+}
+
+void CUdpSocket::StartServer(uint16_t serverPort)
+{
+    QMetaObject::invokeMethod(this, "InternalStartServer", Q_ARG(uint16_t, serverPort));
 }
 
 void CUdpSocket::Stop()
@@ -31,37 +34,55 @@ void CUdpSocket::Stop()
 
 void CUdpSocket::SendData(const QByteArray &data)
 {
-    int64_t ret = m_pSocket->writeDatagram(data, QHostAddress(m_remoteIpAddr), m_remotePort);
-    if(ret != data.length())
+    sockaddr_in addr;
+    memset(&addr, 0, sizeof (addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(m_peerAddr.toUtf8().data());
+    addr.sin_port = htons(m_peerPort);
+
+    int64_t ret = sendto(m_socket, data.data(), data.length(), 0, (sockaddr*)&addr, sizeof (addr));
+    if(-1 == ret)
     {
-        emit signalError(QString("发送数据错误:%1").arg(m_pSocket->errorString()));
+        emit signalError(QString("发送数据错误:%1").arg(GetLastError()));
     }
-    m_pSocket->waitForBytesWritten();
 }
 
-void CUdpSocket::InternalStart(const QString &ipAddr, uint16_t port)
+void CUdpSocket::InternalStartClient(const QString &serverAddr, uint16_t serverPort)
 {
-    m_remoteIpAddr = ipAddr;
-    m_remotePort = port;
-    m_pSocket = new QUdpSocket;
-    if(!m_pSocket->bind(QHostAddress(QHostAddress::Any), m_localPort))
+    m_peerAddr = serverAddr;
+    m_peerPort = serverPort;
+    uint64_t errCode;
+    if(!CreateSocket(0, errCode))
     {
-        emit signalError(QStringLiteral("绑定端口失败,错误:%1").arg(m_pSocket->errorString()));
+        emit signalError(QString("创建套接字失败,错误:%1").arg(errCode));
         return;
     }
-    connect(m_pSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &CUdpSocket::slotSocketError);
-    connect(m_pSocket, &QUdpSocket::readyRead, this, &CUdpSocket::slotReadyRead);
     emit signalMessage("打开套接字成功");
+    startSelect();
+    SendHandShankReq();
+}
+
+void CUdpSocket::InternalStartServer(uint16_t serverPort)
+{
+    uint64_t errCode;
+    if(!CreateSocket(serverPort, errCode))
+    {
+        emit signalError(QString("创建套接字失败,错误:%1").arg(errCode));
+        return;
+    }
+    emit signalMessage("打开套接字成功");
+    startSelect();
 }
 
 void CUdpSocket::InternalStop()
 {
-    m_pSocket->close();
+    closesocket(m_socket);
+    m_socket = INVALID_SOCKET;
     m_socketStatus = SOCKET_STATUS::SOCKET_STATUS_CLOSE;
     m_thread.quit();
 }
 
-void CUdpSocket::ParseData(const uint8_t *buffer)
+void CUdpSocket::ParseData(const uint8_t *buffer, const QString& peerAddr, uint16_t peerPort)
 {
     const Packet *pPacket = reinterpret_cast<const Packet*>(buffer);
     uint32_t magicNumber = qFromBigEndian(pPacket->magic_number);
@@ -74,7 +95,12 @@ void CUdpSocket::ParseData(const uint8_t *buffer)
     switch (cmd)
     {
     case CMD_HANDSHANK_REQ:
+        m_peerAddr = peerAddr;
+        m_peerPort = peerPort;
         ProcessHandShankReq();
+        break;
+    case CMD_HANDSHANK_RESP:
+        ProcessHandShankResp();
         break;
     case CMD_FILE_START:
         ProcessFileStart(buffer);
@@ -90,21 +116,85 @@ void CUdpSocket::ParseData(const uint8_t *buffer)
     }
 }
 
-void CUdpSocket::slotSocketError(QAbstractSocket::SocketError socketError)
+bool CUdpSocket::CreateSocket(uint16_t port, uint64_t &errCode)
 {
-    Q_UNUSED(socketError)
-    emit signalError(QStringLiteral("套接字错误:%1").arg(m_pSocket->errorString()));
+    m_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if(m_socket == INVALID_SOCKET)
+    {
+        errCode = GetLastError();
+        return false;
+    }
+
+    sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(port);
+    if(bind(m_socket, (sockaddr*)&addr, sizeof(addr)))
+    {
+        errCode = GetLastError();
+        closesocket(m_socket);
+        m_socket = INVALID_SOCKET;
+        return false;
+    }
+
+    int bufferLen = 500 * 1024 * 1024;
+    if(setsockopt(m_socket, SOL_SOCKET, SO_RCVBUF, (const char*)&bufferLen, sizeof(int)) ||
+            setsockopt(m_socket, SOL_SOCKET, SO_SNDBUF, (const char*)&bufferLen, sizeof(int)))
+    {
+        errCode = GetLastError();
+        closesocket(m_socket);
+        m_socket = INVALID_SOCKET;
+    }
+
+    return true;
 }
 
-void CUdpSocket::slotReadyRead()
+void CUdpSocket::startSelect()
 {
-    char buffer[1024*100] = {0};
-    while(m_pSocket->hasPendingDatagrams())
-    {
-        int64_t readBytes = m_pSocket->readDatagram(buffer, sizeof(buffer));
-        if(readBytes >= sizeof (Packet))
+    QtConcurrent::run([this](){
+        char buffer[1024*100] = {0};
+        fd_set readSet, exceptionSet;
+        while(m_socket != INVALID_SOCKET)
         {
-            ParseData(reinterpret_cast<const uint8_t*>(buffer));
+            FD_ZERO(&readSet);
+            FD_ZERO(&exceptionSet);
+            FD_SET(m_socket, &readSet);
+            FD_SET(m_socket, &exceptionSet);
+            if(-1 == select(m_socket+1, &readSet, nullptr, &exceptionSet, nullptr))
+            {
+                emit signalError(QString("套接字错误:%1").arg(GetLastError()));
+                closesocket(m_socket);
+                m_socket = INVALID_SOCKET;
+                return;
+            }
+            if(FD_ISSET(m_socket, &readSet))
+            {
+                sockaddr_in fromAddr;
+                int fromLen = sizeof(fromAddr);
+                int64_t readBytes = recvfrom(m_socket, buffer, sizeof(buffer), 0, (sockaddr*)&fromAddr, &fromLen);
+                if(readBytes == -1)
+                {
+                    if(GetLastError() != 10038)
+                    {
+                        emit signalError(QString("套接字错误:%1").arg(GetLastError()));
+                    }
+                    closesocket(m_socket);
+                    m_socket = INVALID_SOCKET;
+                    return;
+                }
+                if(readBytes >= sizeof (Packet))
+                {
+                    ParseData(reinterpret_cast<const uint8_t*>(buffer), inet_ntoa(fromAddr.sin_addr), ntohs(fromAddr.sin_port));
+                }
+            }
+            if(FD_ISSET(m_socket, &exceptionSet))
+            {
+                emit signalError(QString("套接字错误:%1").arg(GetLastError()));
+                closesocket(m_socket);
+                m_socket = INVALID_SOCKET;
+                return;
+            }
         }
-    }
+    });
 }

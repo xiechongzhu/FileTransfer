@@ -2,8 +2,7 @@
 发送的数据为网络字节序（大端模式）
 
 
-下位机作为服务器；
-APP连接下位机成功后，下位机应发送CMD_HANDSHANK_REQ命令到APP，APP收到后回复CMD_HANDSHANK_RESP，握手成功，可以开始相互进行文件传输了；
+客户端连接服务器后，客户端发送CMD_HANDSHANK_REQ命令到服务器，服务器收到后回复CMD_HANDSHANK_RESP，握手成功，可以开始相互进行文件传输了；
 发送方发送CMD_FILE_START命令，消息体里面带文件名，接收方收到后创建文件；
 发送方读取文件，将文件内容封装在CMD_FILE_DATA类型的数据包中进行发送；
 发送文件完成，发送方发送CMD_FILE_END命令，接收方收到后关闭文件；

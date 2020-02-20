@@ -11,12 +11,13 @@ public:
     static const uint32_t MAX_BUFFER_LENGTH = 1024 * 1024 *16;
     CTcpClientSocket();
     virtual ~CTcpClientSocket() override;
-    virtual void Start(const QString& remoteAddr, uint16_t remotePort, uint16_t localPort) override;
+    virtual void StartClient(const QString& serverAddr, uint16_t serverPort) override;
+    virtual void StartServer(uint16_t serverPort) override;
     virtual void Stop() override;
 protected:
     Q_INVOKABLE virtual void SendData(const QByteArray& data) override;
     void ParseData();
-    Q_INVOKABLE void InternalStart(const QString &ipAddr, uint16_t port);
+    Q_INVOKABLE void InternalStartClient(const QString &ipAddr, uint16_t port);
     Q_INVOKABLE void InternalStop();
 private:
     QTcpSocket *m_pSocket;

@@ -8,6 +8,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow), m_pSocket(nullptr)
 {
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(1, 1), &wsaData);
     ui->setupUi(this);
     InitWidgets();
     addLog(LOG_LEVEL::LOG_LEVEL_INFO, "程序启动成功");
@@ -16,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+    WSACleanup();
 }
 
 void MainWindow::InitWidgets()
@@ -39,6 +42,26 @@ void MainWindow::addLog(LOG_LEVEL logLevel, const QString &logMsg)
 {
     m_logModel.add(logLevel, logMsg);
     ui->logTableView->scrollToBottom();
+}
+
+void MainWindow::OpenSocket(int socketType)
+{
+    switch(socketType)
+    {
+    case PROTOCOL_TCP_CLIENT:
+        m_pSocket->StartClient(ui->editIpAddr->text(), ui->editServerPort->text().toUShort());
+        break;
+    case PROTOCOL_UDP_CLIENT:
+        m_pSocket->StartClient(ui->editIpAddr->text(), ui->editServerPort->text().toUShort());
+        break;
+    case PROTOCOL_TCP_SERVER:
+        break;
+    case PROTOCOL_UDP_SERVER:
+        m_pSocket->StartServer(ui->editServerPort->text().toUShort());
+        break;
+    default:
+        break;
+    }
 }
 
 void MainWindow::on_btnAddFiles_clicked()
@@ -88,6 +111,7 @@ void MainWindow::on_btnConnect_clicked()
     case PROTOCOL_TCP_SERVER:
         break;
     case PROTOCOL_UDP_SERVER:
+        m_pSocket = new CUdpSocket;
         break;
     default:
         break;
@@ -97,10 +121,11 @@ void MainWindow::on_btnConnect_clicked()
         connect(m_pSocket, &CSocketBase::signalClose, this, &MainWindow::slotClose);
         connect(m_pSocket, &CSocketBase::signalError, this, &MainWindow::slotError);
         connect(m_pSocket, &CSocketBase::signalMessage, this, &MainWindow::slotMessage);
-        connect(m_pSocket, &CSocketBase::signalHandShank, this, &MainWindow::slotHandShank);
+        connect(m_pSocket, &CSocketBase::signalHandShankReq, this, &MainWindow::slotHandShankReq);
+        connect(m_pSocket, &CSocketBase::signalHandShankResp, this, &MainWindow::slotHandShankResp);
         connect(m_pSocket, &CSocketBase::signalFileSendFinish, this, &MainWindow::slotSendFileFinish);
         connect(m_pSocket, &CSocketBase::signalSendFileProgressChange, this, &MainWindow::slotFileSendProgressChange);
-        m_pSocket->Start(ui->editIpAddr->text(), ui->editRemotePort->text().toUShort(), ui->editLocalPort->text().toUShort());
+        OpenSocket(ui->cbProtocol->currentData().toInt());
     }
 }
 
@@ -127,7 +152,13 @@ void MainWindow::slotMessage(const QString &message)
     addLog(LOG_LEVEL::LOG_LEVEL_INFO, message);
 }
 
-void MainWindow::slotHandShank()
+void MainWindow::slotHandShankReq()
+{
+    ui->btnSendFiles->setEnabled(true);
+    ui->btnStopSend->setEnabled(false);
+}
+
+void MainWindow::slotHandShankResp()
 {
     ui->btnSendFiles->setEnabled(true);
     ui->btnStopSend->setEnabled(false);
@@ -137,6 +168,7 @@ void MainWindow::slotSendFileFinish()
 {
     ui->btnSendFiles->setEnabled(true);
     ui->btnStopSend->setEnabled(false);
+    ui->btnDisconnect->setEnabled(true);
 }
 
 void MainWindow::slotFileSendProgressChange(int progress)
@@ -160,6 +192,7 @@ void MainWindow::on_btnSendFiles_clicked()
     QMetaObject::invokeMethod(m_pSocket, "SendFile", Q_ARG(const QStringList&, fileList));
     ui->btnSendFiles->setEnabled(false);
     ui->btnStopSend->setEnabled(true);
+    ui->btnDisconnect->setEnabled(false);
 }
 
 void MainWindow::on_btnStopSend_clicked()
@@ -173,18 +206,18 @@ void MainWindow::on_cbProtocol_currentIndexChanged(int index)
     switch (ui->cbProtocol->currentData().toInt())
     {
     case PROTOCOL_TCP_CLIENT:
-        ui->editLocalPort->setEnabled(false);
-        ui->btnHandShank->setVisible(false);
         break;
     case PROTOCOL_UDP_CLIENT:
-        ui->editLocalPort->setEnabled(true);
-        ui->btnHandShank->setVisible(false);
+        ui->labelAddr->setVisible(true);
+        ui->editIpAddr->setVisible(true);
+        ui->btnConnect->setText("连接");
         break;
     case PROTOCOL_TCP_SERVER:
-        ui->btnHandShank->setVisible(true);
         break;
     case PROTOCOL_UDP_SERVER:
-        ui->btnHandShank->setVisible(true);
+        ui->labelAddr->setVisible(false);
+        ui->editIpAddr->setVisible(false);
+        ui->btnConnect->setText("打开");
         break;
     default:
         break;

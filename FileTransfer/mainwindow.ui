@@ -47,7 +47,7 @@
               <widget class="QComboBox" name="cbProtocol"/>
              </item>
              <item>
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="labelAddr">
                <property name="text">
                 <string>服务器IP:</string>
                </property>
@@ -61,30 +61,16 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_3">
+              <widget class="QLabel" name="labelServerPort">
                <property name="text">
                 <string>服务器端口:</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="editRemotePort">
+              <widget class="QLineEdit" name="editServerPort">
                <property name="text">
                 <string notr="true">8080</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_5">
-               <property name="text">
-                <string>本地端口:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="editLocalPort">
-               <property name="text">
-                <string>6666</string>
                </property>
               </widget>
              </item>
@@ -99,13 +85,6 @@
               <widget class="QPushButton" name="btnDisconnect">
                <property name="text">
                 <string>断开</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnHandShank">
-               <property name="text">
-                <string>握手</string>
                </property>
               </widget>
              </item>

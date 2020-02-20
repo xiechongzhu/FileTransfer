@@ -20,6 +20,7 @@ public:
 protected:
     void InitWidgets();
     void addLog(LOG_LEVEL logLevel, const QString& logMsg);
+    void OpenSocket(int socketType);
 private slots:
     void on_btnAddFiles_clicked();
 
@@ -45,7 +46,8 @@ protected slots:
     void slotClose();
     void slotError(const QString& errString);
     void slotMessage(const QString& message);
-    void slotHandShank();
+    void slotHandShankReq();
+    void slotHandShankResp();
     void slotSendFileFinish();
     void slotFileSendProgressChange(int progress);
 };
