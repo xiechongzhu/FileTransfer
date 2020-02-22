@@ -4,17 +4,14 @@
 #include <QtConcurrent/QtConcurrent>
 #include "global/defines.h"
 
-CUdpSocket::CUdpSocket()
+CUdpSocket::CUdpSocket() : m_socket(INVALID_SOCKET)
 {
     SetSendBufferSize(UDP_SEND_BUFFER_SIZE);
 }
 
 CUdpSocket::~CUdpSocket()
 {
-    if(m_socket != INVALID_SOCKET)
-    {
-        closesocket(m_socket);
-    }
+    InternalStop();
 }
 
 void CUdpSocket::StartClient(const QString &serverAddr, uint16_t serverPort)

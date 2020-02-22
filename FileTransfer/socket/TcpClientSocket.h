@@ -26,7 +26,7 @@ private:
 protected slots:
     void slotConnected();
     void slotSocketError(QAbstractSocket::SocketError socketError);
-    void slotDoisconnected();
+    void slotDisconnected();
     void slotReadyRead();
 };
 

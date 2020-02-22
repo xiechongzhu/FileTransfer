@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include "socket/TcpClientSocket.h"
+#include "socket/TcpServerSocket.h"
 #include "socket/UdpSocket.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -55,6 +56,7 @@ void MainWindow::OpenSocket(int socketType)
         m_pSocket->StartClient(ui->editIpAddr->text(), ui->editServerPort->text().toUShort());
         break;
     case PROTOCOL_TCP_SERVER:
+        m_pSocket->StartServer(ui->editServerPort->text().toUShort());
         break;
     case PROTOCOL_UDP_SERVER:
         m_pSocket->StartServer(ui->editServerPort->text().toUShort());
@@ -92,12 +94,7 @@ void MainWindow::on_btnConnect_clicked()
     ui->btnDisconnect->setEnabled(true);
     if(m_pSocket)
     {
-        disconnect(m_pSocket, &CSocketBase::signalClose, this, &MainWindow::slotClose);
-        disconnect(m_pSocket, &CSocketBase::signalError, this, &MainWindow::slotError);
-        disconnect(m_pSocket, &CSocketBase::signalMessage, this, &MainWindow::slotMessage);
-        disconnect(m_pSocket, &CSocketBase::signalFileSendFinish, this, &MainWindow::slotSendFileFinish);
-        disconnect(m_pSocket, &CSocketBase::signalSendFileProgressChange, this, &MainWindow::slotFileSendProgressChange);
-        m_pSocket->deleteLater();
+        delete m_pSocket;
         m_pSocket = nullptr;
     }
     switch(ui->cbProtocol->currentData().toInt())
@@ -109,6 +106,7 @@ void MainWindow::on_btnConnect_clicked()
         m_pSocket = new CUdpSocket;
         break;
     case PROTOCOL_TCP_SERVER:
+        m_pSocket = new CTcpServerSocket;
         break;
     case PROTOCOL_UDP_SERVER:
         m_pSocket = new CUdpSocket;
@@ -206,14 +204,12 @@ void MainWindow::on_cbProtocol_currentIndexChanged(int index)
     switch (ui->cbProtocol->currentData().toInt())
     {
     case PROTOCOL_TCP_CLIENT:
-        break;
     case PROTOCOL_UDP_CLIENT:
         ui->labelAddr->setVisible(true);
         ui->editIpAddr->setVisible(true);
         ui->btnConnect->setText("连接");
         break;
     case PROTOCOL_TCP_SERVER:
-        break;
     case PROTOCOL_UDP_SERVER:
         ui->labelAddr->setVisible(false);
         ui->editIpAddr->setVisible(false);

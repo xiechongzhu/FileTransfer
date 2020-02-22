@@ -31,6 +31,7 @@ SOURCES += \
         protocol/DataBuilder.cpp \
         socket/SocketBase.cpp \
         socket/TcpClientSocket.cpp \
+        socket/TcpServerSocket.cpp \
         socket/UdpSocket.cpp
 
 HEADERS += \
@@ -41,6 +42,7 @@ HEADERS += \
         protocol/DataBuilder.h \
         socket/SocketBase.h \
         socket/TcpClientSocket.h \
+        socket/TcpServerSocket.h \
         socket/UdpSocket.h
 
 FORMS += \

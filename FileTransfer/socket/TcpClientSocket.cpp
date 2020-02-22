@@ -4,21 +4,14 @@
 #include <QDebug>
 #include "global/defines.h"
 
-CTcpClientSocket::CTcpClientSocket() : m_dataBufferPos(0)
+CTcpClientSocket::CTcpClientSocket() : m_pSocket(nullptr), m_dataBufferPos(0)
 {
     SetSendBufferSize(TCP_SEND_BUFFER_SIZE);
 }
 
 CTcpClientSocket::~CTcpClientSocket()
 {
-    if(m_pSocket)
-    {
-        disconnect(m_pSocket, &QTcpSocket::connected, this, &CTcpClientSocket::slotConnected);
-        disconnect(m_pSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &CTcpClientSocket::slotSocketError);
-        disconnect(m_pSocket, &QTcpSocket::disconnected, this, &CTcpClientSocket::slotDoisconnected);
-        disconnect(m_pSocket, &QTcpSocket::readyRead, this, &CTcpClientSocket::slotReadyRead);
-        delete m_pSocket;
-    }
+    InternalStop();
 }
 
 void CTcpClientSocket::StartClient(const QString &serverAddr, uint16_t serverPort)
@@ -96,7 +89,7 @@ void CTcpClientSocket::ParseData()
             default:
                 break;
             }
-            memcpy(m_dataBuffer + packetLength, m_dataBuffer, m_dataBufferPos - packetLength);
+            memcpy(m_dataBuffer, m_dataBuffer + packetLength, m_dataBufferPos - packetLength);
             m_dataBufferPos -= packetLength;
         }
         else
@@ -112,14 +105,19 @@ void CTcpClientSocket::InternalStartClient(const QString &ipAddr, uint16_t port)
     m_pSocket->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
     connect(m_pSocket, &QTcpSocket::connected, this, &CTcpClientSocket::slotConnected);
     connect(m_pSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &CTcpClientSocket::slotSocketError);
-    connect(m_pSocket, &QTcpSocket::disconnected, this, &CTcpClientSocket::slotDoisconnected);
+    connect(m_pSocket, &QTcpSocket::disconnected, this, &CTcpClientSocket::slotDisconnected);
     connect(m_pSocket, &QTcpSocket::readyRead, this, &CTcpClientSocket::slotReadyRead);
     m_pSocket->connectToHost(ipAddr, port);
 }
 
 void CTcpClientSocket::InternalStop()
 {
-    m_pSocket->close();
+    if(m_pSocket)
+    {
+        m_pSocket->close();
+        delete m_pSocket;
+        m_pSocket = nullptr;
+    }
     m_dataBufferPos = 0;
     m_socketStatus = SOCKET_STATUS::SOCKET_STATUS_CLOSE;
     m_thread.quit();
@@ -146,7 +144,7 @@ void CTcpClientSocket::slotSocketError(QAbstractSocket::SocketError socketError)
     }
 }
 
-void CTcpClientSocket::slotDoisconnected()
+void CTcpClientSocket::slotDisconnected()
 {
     emit signalMessage("与服务器断开连接");
     m_socketStatus = SOCKET_STATUS::SOCKET_STATUS_CLOSE;
