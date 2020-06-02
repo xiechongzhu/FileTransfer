@@ -37,7 +37,7 @@ void CTcpServerSocket::SendData(const QByteArray &data)
     int64_t bytesToWrite = data.length();
     uint64_t pos = 0;
     const char* pData = data.data();
-    while(bytesToWrite)
+    while(bytesToWrite && m_pSocket)
     {
         int64_t ret = m_pSocket->write(pData+pos, bytesToWrite);
         if(-1 == ret)
